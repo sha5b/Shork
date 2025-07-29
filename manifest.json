@@ -6,7 +6,8 @@
       "paramKeys": [],
       "page": "/home/runner/work/Shork/Shork/src/routes/+page.html",
       "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
-      "js": null
+      "js": null,
+      "schema": null
     },
     {
       "path": "/blog",
@@ -14,7 +15,8 @@
       "paramKeys": [],
       "page": "/home/runner/work/Shork/Shork/src/routes/blog/+page.html",
       "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
-      "js": "/home/runner/work/Shork/Shork/src/routes/blog/+page.js"
+      "js": "/home/runner/work/Shork/Shork/src/routes/blog/+page.js",
+      "schema": "/home/runner/work/Shork/Shork/src/routes/blog/+schema.js"
     },
     {
       "path": "/about",
@@ -22,7 +24,8 @@
       "paramKeys": [],
       "page": "/home/runner/work/Shork/Shork/src/routes/about/+page.html",
       "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
-      "js": null
+      "js": null,
+      "schema": null
     },
     {
       "path": "/blog/[slug]",
@@ -32,7 +35,8 @@
       ],
       "page": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.html",
       "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
-      "js": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.js"
+      "js": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.js",
+      "schema": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+schema.js"
     }
   ]
 }

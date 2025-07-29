@@ -6,6 +6,7 @@
  * @property {string} page
  * @property {string} layout
  * @property {string | null} js
+ * @property {string} css
  */
 
 export {};

@@ -98,6 +98,7 @@ async function buildRouteManifest() {
 
         const layoutPath = await findLayout(dir, routesDir);
         const pageJsPath = path.join(routesDir, dir, '+page.js');
+        const schemaPath = path.join(routesDir, dir, '+schema.js');
 
         manifest.routes.push({
             path: routePath,
@@ -106,6 +107,7 @@ async function buildRouteManifest() {
             page: path.join(routesDir, pageFile),
             layout: layoutPath,
             js: (await fs.pathExists(pageJsPath)) ? pageJsPath : null,
+            schema: (await fs.pathExists(schemaPath)) ? schemaPath : null,
         });
     }
 
@@ -222,6 +224,25 @@ async function buildPage(route, appTemplate, options) {
 
             // Spread loaded data into the page data
             pageData = { ...pageData, ...loadedData };
+        }
+    }
+
+    // 2. Validate data against schema if it exists
+    if (route.schema) {
+        try {
+            const schemaModule = await importWithCache(route.schema);
+            if (schemaModule.schema) {
+                schemaModule.schema.parse(pageData);
+            }
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                console.error(`❌ Data validation failed for ${route.path}`);
+                console.error(error.flatten());
+            } else {
+                console.error(`An unexpected error occurred during schema validation for ${route.path}`);
+                console.error(error);
+            }
+            throw new Error(`Schema validation failed for ${route.path}`);
         }
     }
 

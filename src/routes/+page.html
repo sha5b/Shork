@@ -1,0 +1,23 @@
+<h1>Welcome to the Home Page</h1>
+
+<h2>Welcome to our custom framework!</h2>
+<p>This is the main entry point of our application.</p>
+
+{{#if showExtra}}
+    <p>This is an extra message, shown only when 'showExtra' is true!</p>
+{{/if}}
+
+<Component:Counter />
+
+<Component:Card title="First Card">
+    <p>This is the first reusable card component, now with <strong>rich content</strong> passed through a slot.</p>
+</Component:Card>
+
+<Component:Card title="Second Card">
+    <p>The content can be anything, even a list:</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+</Component:Card>

@@ -1,0 +1,26 @@
+{
+  "name": "routing-js-css-html",
+  "version": "1.0.0",
+  "description": "A custom vanilla JS micro-framework.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/dev.js",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chokidar": "^3.5.3",
+    "ejs": "^3.1.9",
+    "ejs-lint": "^2.0.1",
+    "esbuild": "^0.25.8",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.3",
+    "vitest": "^3.2.4",
+    "ws": "^8.13.0",
+    "zod": "^4.0.13"
+  }
+}

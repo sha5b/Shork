@@ -1,0 +1,38 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "regex": "^/$",
+      "paramKeys": [],
+      "page": "/home/runner/work/Shork/Shork/src/routes/+page.html",
+      "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
+      "js": null
+    },
+    {
+      "path": "/blog",
+      "regex": "^/blog$",
+      "paramKeys": [],
+      "page": "/home/runner/work/Shork/Shork/src/routes/blog/+page.html",
+      "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
+      "js": "/home/runner/work/Shork/Shork/src/routes/blog/+page.js"
+    },
+    {
+      "path": "/about",
+      "regex": "^/about$",
+      "paramKeys": [],
+      "page": "/home/runner/work/Shork/Shork/src/routes/about/+page.html",
+      "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
+      "js": null
+    },
+    {
+      "path": "/blog/[slug]",
+      "regex": "^/blog/([^/]+)$",
+      "paramKeys": [
+        "slug"
+      ],
+      "page": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.html",
+      "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
+      "js": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.js"
+    }
+  ]
+}

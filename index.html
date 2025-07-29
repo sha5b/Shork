@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanilla Framework</title>
+    <link rel="stylesheet" href="/app.css">
+    <style>
+      /* View Transition styles */
+      @keyframes fade-in {
+        from { opacity: 0; }
+      }
+
+      @keyframes fade-out {
+        to { opacity: 0; }
+      }
+
+      @keyframes slide-from-right {
+        from { transform: translateX(30px); }
+      }
+
+      @keyframes slide-to-left {
+        to { transform: translateX(-30px); }
+      }
+
+      ::view-transition-old(root) {
+        animation: 90ms cubic-bezier(0.4, 0, 1, 1) both fade-out, 300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+      }
+
+      ::view-transition-new(root) {
+        animation: 210ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in, 300ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+      }
+    </style>
+    <style>header{background:#333;padding:1rem}nav a{color:#fff;margin-right:1rem;text-decoration:none}nav a:hover{text-decoration:underline}.counter{text-align:center;border:1px solid #ddd;margin:1rem 0;padding:1rem}.counter button{margin:0 .5rem;padding:.5rem 1rem;font-size:1.5rem}.card{border:1px solid #ccc;border-radius:8px;margin:1rem 0;padding:1rem;box-shadow:0 2px 4px #0000001a}</style>
+    <style id="page-styles"></style>
+</head>
+<body>
+    <div id="app"><header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/blog">Blog</a>
+    </nav>
+</header>
+
+<main>
+    <h1>Welcome to the Home Page</h1>
+
+<h2>Welcome to our custom framework!</h2>
+<p>This is the main entry point of our application.</p>
+
+
+    <p>This is an extra message, shown only when 'showExtra' is true!</p>
+
+
+<div class="counter">
+    <h2>Shared Counter</h2>
+    <p>Current count: <span data-subscribe="count">0</span></p>
+    <button data-onclick="decrement">-</button>
+    <button data-onclick="increment">+</button>
+</div>
+
+<div class="card">
+    <h3></h3>
+    <div class="card-content">
+        
+    <p>This is the first reusable card component, now with <strong>rich content</strong> passed through a slot.</p>
+
+    </div>
+</div>
+
+<div class="card">
+    <h3></h3>
+    <div class="card-content">
+        
+    <p>The content can be anything, even a list:</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+
+    </div>
+</div>
+
+</main>
+
+<footer>
+    <p>Built with our custom framework!</p>
+</footer>
+</div>
+    <script type="module" src="/main.js"></script>
+</body>
+</html>

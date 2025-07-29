@@ -61,7 +61,7 @@ function createFetcher(method) {
 }
 `;
 
-async function generateApiClient() {
+export async function generateApiClient() {
     console.log('Generating API client...');
 
     const apiFiles = await glob('**/*.js', { cwd: apiDir });
@@ -117,7 +117,9 @@ function generateClientCode(apiObject) {
     return code;
 }
 
-generateApiClient().catch(err => {
-    console.error('Failed to generate API client:', err);
-    process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    generateApiClient().catch(err => {
+        console.error('Failed to generate API client:', err);
+        process.exit(1);
+    });
+}

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import * as esbuild from 'esbuild';
 import { transform as transformCss } from 'lightningcss';
 import { processComponents } from './components.js';
+import { generateApiClient } from './generate-api-client.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,9 @@ const componentsDir = path.join(srcDir, 'lib', 'components');
  */
 async function build() {
     console.log('Starting build...');
+
+    // 0. Generate API client
+    await generateApiClient();
 
     try {
         // 1. Clean and create the dist directory

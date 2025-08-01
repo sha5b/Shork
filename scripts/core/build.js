@@ -189,7 +189,7 @@ async function buildPage(route, appTemplate, options) {
     if (route.js && await fs.pathExists(route.js)) {
         const module = await importWithCache(route.js);
         if (module.load && typeof module.load === 'function') {
-            const loadedData = await module.load({ params });
+            const loadedData = await module.load({ params, props, globalData });
 
             // Validate loaded data against schema if it exists
             const schemaPath = route.js.replace('+page.js', '+schema.js');

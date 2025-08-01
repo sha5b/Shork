@@ -147,14 +147,14 @@ Create server-side endpoints by adding files to the `src/api` directory. The dev
 
 ### Components
 
-- **Creating & Using:** A component is a `.html` file in `src/lib/components`. Use it with its custom element tag, like `<shork-mycomponent></shork-mycomponent>`.
+- **Creating & Using:** A component is a `.html` file in `src/lib/components`. Use it with `<Component:MyComponent />`.
 - **Props:** Pass data via attributes. Access them with `{{ props.propName }}`.
     ```html
-    <shork-card title="My Card"></shork-card>
+    <Component:Card title="My Card" />
     <!-- In Card.html -->
     <h3>{{ props.title }}</h3>
     ```
-- **Slots:** Pass rich HTML content to a component. The component must have a `{{ slot }}` placeholder.
+- **Slots:** Pass rich HTML content to a component. The component must have a `<slot></slot>` tag.
 
 ## Build and Deployment
 

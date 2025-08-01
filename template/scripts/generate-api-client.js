@@ -2,14 +2,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import { glob } from 'glob';
 import { fileURLToPath } from 'url';
+import config from '../shork.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const srcDir = path.resolve(__dirname, '../src');
-const apiDir = path.join(srcDir, 'api');
-const outputDir = path.join(srcDir, 'lib');
-const outputFile = path.join(outputDir, 'api-client.js');
 
 const helpers = `
 class ApiError extends Error {
@@ -64,7 +59,7 @@ function createFetcher(method) {
 export async function generateApiClient() {
     console.log('Generating API client...');
 
-    const apiFiles = await glob('**/*.js', { cwd: apiDir });
+    const apiFiles = await glob('**/*.js', { cwd: config.apiDir });
 
     const apiObject = {};
     for (const file of apiFiles) {
@@ -89,10 +84,10 @@ export async function generateApiClient() {
 ${helpers}
 export const api = ${generateClientCode(apiObject)};`;
 
-    await fs.ensureDir(outputDir);
-    await fs.writeFile(outputFile, clientCode);
+    await fs.ensureDir(config.libDir);
+    await fs.writeFile(config.apiClient, clientCode);
 
-    console.log(`✓ API client generated at ${path.relative(process.cwd(), outputFile)}`);
+    console.log(`✓ API client generated at ${path.relative(process.cwd(), config.apiClient)}`);
 }
 
 function generateClientCode(apiObject) {

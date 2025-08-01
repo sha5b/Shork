@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { preprocessHtml } from './build.js';
+import { preprocessHtml } from '../core/build.js';
 
 describe('preprocessHtml', () => {
   it('should convert simple expressions to EJS syntax', async () => {

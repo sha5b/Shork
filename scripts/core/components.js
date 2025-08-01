@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { parse } from 'node-html-parser';
-import config from '../shork.config.js';
+import config from '../../shork.config.js';
 
 const componentCache = new Map();
 

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { glob } from 'glob';
-import { pathToFileURL, fileURLToPath } from 'url';
+import { pathToFileURL } from 'url';
 import ejs from 'ejs';
 import lint from 'ejs-lint';
 import { z } from 'zod';
@@ -9,36 +9,12 @@ import * as esbuild from 'esbuild';
 import { transform as transformCss } from 'lightningcss';
 import { processComponents } from './components.js';
 import { generateApiClient } from './generate-api-client.js';
+import config from '../shork.config.js';
+import { importWithCache } from './lib/utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-/** @type {string} */
-const srcDir = path.resolve(__dirname, '../src');
-/** @type {string} */
-const distDir = path.resolve(__dirname, '../dist');
-const staticDir = path.resolve(__dirname, '../static');
 
-const importCache = new Map();
 
-/**
- * Imports a module with caching.
- * @param {string} modulePath - The path to the module.
- * @returns {Promise<any>}
- */
-async function importWithCache(modulePath) {
-    const url = pathToFileURL(modulePath).href;
-    const cacheKey = `${url}`; // No timestamp for schemas
-    if (importCache.has(cacheKey)) {
-        return importCache.get(cacheKey);
-    }
-    const module = await import(cacheKey);
-    importCache.set(cacheKey, module);
-    return module;
-}
-
-/** @type {string} */
-const componentsDir = path.join(srcDir, 'lib', 'components');
 
 /**
  * Main build function.
@@ -52,13 +28,13 @@ async function build() {
 
     try {
         // 1. Clean and create the dist directory
-        await fs.emptyDir(distDir);
+        await fs.emptyDir(config.distDir);
 
         // 2. Copy static assets and bundle JS
-        await fs.copy(staticDir, distDir);
+        await fs.copy(config.staticDir, config.distDir);
         await esbuild.build({
-            entryPoints: [path.join(srcDir, 'lib', 'runtime.js')],
-            outfile: path.join(distDir, 'main.js'),
+            entryPoints: [config.runtimeJs],
+            outfile: config.outputJs,
             bundle: true,
             minify: true,
             sourcemap: 'inline',
@@ -67,7 +43,7 @@ async function build() {
 
         // 3. Build route manifest
         const manifest = await buildRouteManifest();
-        await fs.writeJson(path.join(distDir, 'manifest.json'), manifest, { spaces: 2 });
+        await fs.writeJson(config.manifest, manifest, { spaces: 2 });
         console.log('✓ Route manifest generated');
 
         // 4. Build all static pages
@@ -83,10 +59,10 @@ async function build() {
 
 /**
  * Builds the route manifest from the `src/routes` directory.
- * @returns {Promise<{routes: import('../src/lib/types.js').Route[]}>}
+ * @returns {Promise<{routes: import('../../src/lib/types.js').Route[]}>}
  */
 async function buildRouteManifest() {
-    const routesDir = path.join(srcDir, 'routes');
+    const routesDir = config.routesDir;
     const pageFiles = await glob('**/+page.html', { cwd: routesDir });
     const manifest = { routes: [] };
 
@@ -100,15 +76,15 @@ async function buildRouteManifest() {
             return '/([^/]+)';
         });
 
-        const layoutPath = await findLayout(dir, routesDir);
-        const pageJsPath = path.join(routesDir, dir, '+page.js');
-        const schemaPath = path.join(routesDir, dir, '+schema.js');
+        const layoutPath = await findLayout(dir, config.routesDir);
+        const pageJsPath = path.join(config.routesDir, dir, '+page.js');
+        const schemaPath = path.join(config.routesDir, dir, '+schema.js');
 
         manifest.routes.push({
             path: routePath,
             regex: `^${regexPath}$`,
             paramKeys,
-            page: path.join(routesDir, pageFile),
+            page: path.join(config.routesDir, pageFile),
             layout: layoutPath,
             js: (await fs.pathExists(pageJsPath)) ? pageJsPath : null,
             schema: (await fs.pathExists(schemaPath)) ? schemaPath : null,
@@ -128,59 +104,69 @@ async function buildRouteManifest() {
  * @returns {Promise<string>}
  */
 async function findLayout(pageDir, routesDir) {
-    let currentDir = pageDir;
-    while (true) {
-        const layoutPath = path.join(routesDir, currentDir, '+layout.html');
+    let currentDir = path.join(routesDir, pageDir);
+
+    // Stop searching when we go above the /src directory
+    while (currentDir.startsWith(config.srcDir)) {
+        const layoutPath = path.join(currentDir, '+layout.html');
         if (await fs.pathExists(layoutPath)) {
             return layoutPath;
         }
-        if (path.resolve(routesDir, currentDir) === routesDir) {
-            throw new Error(`Could not find a layout for ${pageDir}`);
+        // Move up to the parent directory
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) { // Reached the top
+            break;
         }
-        currentDir = path.dirname(currentDir);
+        currentDir = parentDir;
     }
+
+    // Fallback to the root layout in src/lib/+layout.html
+    const rootLayout = path.join(config.libDir, '+layout.html');
+    if (await fs.pathExists(rootLayout)) {
+        return rootLayout;
+    }
+
+    throw new Error(`No layout found for ${pageDir}. Create a +layout.html in the directory or any parent directory.`);
 }
 
 /**
  * Builds all static pages from the manifest.
- * @param {{routes: import('../src/lib/types.js').Route[]}} manifest
+ * @param {{routes: import('../../src/lib/types.js').Route[]}} manifest
  * @returns {Promise<void>}
  */
 async function buildPages(manifest) {
-    const appTemplatePath = path.join(srcDir, 'app.html');
+    const appTemplatePath = path.join(config.srcDir, 'app.html');
     const appTemplate = await fs.readFile(appTemplatePath, 'utf-8');
 
     // Load global data once
-    const globalDataPath = path.join(srcDir, 'data.js');
+    const globalDataPath = path.join(config.srcDir, 'data.js');
     const globalData = (await fs.pathExists(globalDataPath)) ? (await importWithCache(globalDataPath)).default : {};
 
     for (const route of manifest.routes) {
-        // Check for dynamic routes that need getStaticPaths
-        if (route.paramKeys.length > 0) {
-            if (!route.js || !(await fs.pathExists(route.js))) {
-                console.warn(`Skipping dynamic route: ${route.path} (no +page.js file found)`);
-                continue;
-            }
-            const pageModule = await importWithCache(route.js);
-            if (!pageModule.getStaticPaths) {
-                console.warn(`Skipping dynamic route: ${route.path} (no getStaticPaths export found)`);
-                continue;
-            }
-
-            const paths = await pageModule.getStaticPaths();
-            for (const { params, props } of paths) {
-                await buildPage(route, appTemplate, { params, props, globalData });
-            }
-        } else {
-            // Handle static routes
+        // For static routes, just build them directly
+        if (route.paramKeys.length === 0) {
             await buildPage(route, appTemplate, { params: {}, props: {}, globalData });
+            continue;
+        }
+
+        // For dynamic routes, find all possible paths from a `generateStaticParams` function
+        if (route.js) {
+            const pageModule = await importWithCache(route.js);
+            if (pageModule.generateStaticParams) {
+                const paramsArray = await pageModule.generateStaticParams({ globalData });
+                for (const params of paramsArray) {
+                    // Props can also be returned from generateStaticParams, so we'll pass them along if they exist.
+                    const { props = {} } = params;
+                    await buildPage(route, appTemplate, { params, props, globalData });
+                }
+            }
         }
     }
 }
 
 /**
  * Builds a single page.
- * @param {import('../src/lib/types.js').Route} route
+ * @param {import('../../src/lib/types.js').Route} route
  * @param {string} appTemplate
  * @param {{params: Record<string, string>, props: Record<string, any>, globalData: Record<string, any>}} [options]
  * @returns {Promise<void>}
@@ -266,7 +252,7 @@ async function buildPage(route, appTemplate, options) {
         let pageRender;
         try {
             const renderData = { props: {}, ...pageData };
-            pageRender = await ejs.render(processedPage, renderData, { async: true, root: componentsDir, filename: route.page });
+            pageRender = await ejs.render(processedPage, renderData, { async: true, root: config.componentsDir, filename: route.page });
         } catch (error) {
             console.error(`\n❌ EJS render error in page: ${route.page}`);
             // Avoid circular references when stringifying data
@@ -281,7 +267,7 @@ async function buildPage(route, appTemplate, options) {
         let layoutRender;
         try {
             const layoutData = { body: pageRender, ...pageData };
-            layoutRender = await ejs.render(processedLayout, layoutData, { async: true, root: componentsDir, filename: route.layout });
+            layoutRender = await ejs.render(processedLayout, layoutData, { async: true, root: config.componentsDir, filename: route.layout });
         } catch (error) {
             console.error(`\n❌ EJS render error in layout: ${route.layout}`);
             throw error;
@@ -298,7 +284,7 @@ async function buildPage(route, appTemplate, options) {
         const headContent = `<style>${minifiedCss.toString()}</style>`;
         const finalHtml = appTemplate.replace('%body%', layoutRender).replace('%head%', headContent);
 
-        const outputPath = path.join(distDir, routePath === '/' ? 'index.html' : path.join(routePath.slice(1), 'index.html'));
+        const outputPath = path.join(config.distDir, routePath === '/' ? 'index.html' : path.join(routePath.slice(1), 'index.html'));
         await fs.ensureDir(path.dirname(outputPath));
         await fs.writeFile(outputPath, finalHtml);
 }

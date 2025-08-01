@@ -109,7 +109,7 @@ To load data into your pages, you create a `+page.js` file and use one of the fo
     To load data for a single page (like a blog index), export a `load` function that fetches data from the database.
     ```javascript
     // src/routes/blog/+page.js
-    import { db } from '../../lib/database.js';
+    import { db } from '../../lib/data/database.js';
 
     export async function load() {
         const posts = await db.posts.findMany();
@@ -121,7 +121,7 @@ To load data into your pages, you create a `+page.js` file and use one of the fo
     For a dynamic route like `[slug]`, export a `getStaticPaths` function to generate all the necessary pages.
     ```javascript
     // src/routes/blog/[slug]/+page.js
-    import { db } from '../../../lib/database.js';
+    import { db } from '../../../lib/data/database.js';
 
     export async function getStaticPaths() {
         const posts = await db.posts.findMany();

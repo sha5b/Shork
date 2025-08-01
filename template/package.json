@@ -1,23 +1,14 @@
 {
-  "name": "@sha5b/create-shork",
+  "name": "my-shork-app",
   "version": "1.0.0",
-  "description": "A custom vanilla JS micro-framework.",
+  "description": "A new project created with Shork",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
     "dev": "node scripts/dev.js",
-    "test": "vitest",
-    "update-template": "node scripts/update-template.js"
+    "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "files": [
-    "template",
-    "scripts/init.js"
-  ],
-  "bin": "./scripts/init.js",
   "devDependencies": {
     "chokidar": "^3.5.3",
     "ejs": "^3.1.9",

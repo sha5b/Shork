@@ -201,3 +201,44 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
 ```
+
+## Publishing to npm
+
+These instructions are for maintainers of the Shork framework.
+
+### First-Time Publishing
+
+To make your framework available on the npm registry for the first time, follow these steps:
+
+1.  **Log in to npm** (you only need to do this once):
+    ```bash
+    npm login
+    ```
+
+2.  **Publish the package**:
+    Your package name must be unique. It's best to use a scoped name like `@username/shork`. If this is your first time publishing a scoped package, you must make it public.
+    ```bash
+    npm publish --access public
+    ```
+
+### Updating the Package
+
+When you make changes and want to release a new version:
+
+1.  **Update your template files** (if needed):
+    This ensures that new projects created with `create-shork` get your latest changes.
+    ```bash
+    npm run update-template
+    ```
+
+2.  **Update the version number**:
+    Use `patch` for bug fixes, `minor` for new features, and `major` for breaking changes.
+    ```bash
+    # Example for a patch release
+    npm version patch
+    ```
+
+3.  **Publish the new version**:
+    ```bash
+    npm publish
+    ```

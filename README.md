@@ -10,6 +10,16 @@ Behold, the future of web development:
 
 ![MLG 360 No Scope](https://media.giphy.com/media/EU9TrSiE2qsA8/giphy.gif)
 
+## Creating a New Project
+
+To start a new project using Shork, run the following command in your terminal:
+
+```bash
+npm create @sha5b/shork my-awesome-app
+```
+
+This will create a new directory called `my-awesome-app` with a fresh Shork project, all ready to go.
+
 ## Features (That Our Legal Team Said We Had to Mention)
 
 - **File-Based Routing:** Because databases are a social construct. True innovators store their routes in the file system. It's organic, gluten-free, and probably a security nightmare. We call that 'opportunity.'

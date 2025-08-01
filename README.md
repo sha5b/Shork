@@ -147,14 +147,70 @@ Create server-side endpoints by adding files to the `src/api` directory. The dev
 
 ### Components
 
-- **Creating & Using:** A component is a `.html` file in `src/lib/components`. Use it with its custom element tag, like `<shork-mycomponent></shork-mycomponent>`.
-- **Props:** Pass data via attributes. Access them with `{{ props.propName }}`.
-    ```html
-    <shork-card title="My Card"></shork-card>
-    <!-- In Card.html -->
-    <h3>{{ props.title }}</h3>
-    ```
-- **Slots:** Pass rich HTML content to a component. The component must have a `{{ slot }}` placeholder.
+Components are the building blocks of your application. In Shork, a component is a single `.html` file that lives in `src/lib/components`. It encapsulates its own template, styles, and logic, making it reusable and easy to manage.
+
+- **Creating & Using:** To create a component, add a new `.html` file to `src/lib/components`. To use it, just include its custom tag in any page or layout. For a `Counter.html` component, you would use `<shork-counter></shork-counter>`.
+
+- **Props:** Pass data to components using attributes. You can access these inside the component with `{{ props.propName }}`.
+
+- **Slots:** Pass rich HTML content to a component by placing it inside the component's tags. The component must have a `{{ slot }}` placeholder where the content will be rendered.
+
+- **Scoped Styles:** Add a `<style>` tag directly in your component file. These styles are automatically scoped, meaning they will only apply to that component and won't leak out to affect the rest of your page.
+
+- **Scoped Logic & Events:** Add a `<script>` tag to define component-specific logic. You can declare functions and variables that are only accessible to your component. To handle events, use the `on:event` directive in your template.
+
+Here is an example of a `Counter.html` component that puts it all together:
+
+```html
+<!-- src/lib/components/Counter.html -->
+<div class="counter">
+    <p>Count: <span id="count-value">0</span></p>
+    <button on:click="increment">+</button>
+    <button on:click="decrement">-</button>
+</div>
+
+<style>
+    /* These styles are scoped to this component */
+    .counter {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        border-radius: 5px;
+        display: inline-block;
+    }
+    button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    let count = 0;
+    const countElement = document.querySelector(`#${id} #count-value`);
+
+    function update() {
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    function increment() {
+        count++;
+        update();
+    }
+
+    function decrement() {
+        count--;
+        update();
+    }
+
+    // The component's root element ID is available as `id`.
+    // You must return an object containing the functions you want to expose to the template.
+    return { increment, decrement };
+</script>
+```
 
 ## Build and Deployment
 

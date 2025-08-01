@@ -3,6 +3,7 @@
 
 # Build output
 /dist
+**/+page.d.ts
 
 # Logs
 npm-debug.log*

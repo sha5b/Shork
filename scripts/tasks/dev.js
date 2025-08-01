@@ -5,6 +5,9 @@ import WebSocket, { WebSocketServer } from 'ws';
 import fs from 'fs-extra';
 import path from 'path';
 import config from '../../shork.config.js';
+import chalk from 'chalk';
+import Table from 'cli-table3';
+import os from 'os';
 
 // --- Create a WebSocket server for live reload ---
 /**
@@ -29,6 +32,30 @@ function sendReload() {
 }
 
 // --- Function to run the build script ---
+function logError(title, error) {
+    console.log(chalk.red.bold(`\n🚨 ${title} 🚨`));
+    if (error instanceof Error) {
+        console.log(chalk.red(error.stack || error.message));
+    } else {
+        console.log(chalk.red(error));
+    }
+    console.log('');
+}
+
+function getLocalIpAddress() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            const { address, family, internal } = iface;
+            if (family === 'IPv4' && !internal) {
+                return address;
+            }
+        }
+    }
+    return '127.0.0.1'; // Fallback
+}
+
+// --- Function to run the build script ---
 function runBuild() {
     return new Promise((resolve, reject) => {
         console.log('Running build script...');
@@ -38,12 +65,12 @@ function runBuild() {
                 console.log('Build completed successfully.');
                 resolve();
             } else {
-                console.error(`Build script exited with code ${code}`);
+                logError('Build Script Error', new Error(`Build script exited with code ${code}`));
                 reject(new Error(`Build failed with code ${code}`));
             }
         });
         buildProcess.on('error', err => {
-            console.error('Failed to start build script:', err);
+            logError('Failed to start build script', err);
             reject(err);
         });
     });
@@ -71,7 +98,7 @@ const server = http.createServer(async (req, res) => {
                 res.writeHead(404).end('API route not found');
             }
         } catch (error) {
-            console.error(`API Error: ${error}`);
+            logError('API Error', error);
             res.writeHead(500).end(`Server error in API route: ${error.message}`);
         }
         return;
@@ -107,7 +134,7 @@ const server = http.createServer(async (req, res) => {
             res.end(content);
         }
     } catch (err) {
-        console.error(`Server Error: ${err}`);
+        logError('Server Error', err);
         res.writeHead(500).end(`Server error: ${err.message}`);
     }
 });
@@ -129,17 +156,36 @@ let debounceTimer;
 function watchFiles() {
     const watcher = chokidar.watch([config.srcDir, config.staticDir], {
         ignored: [/(^|[\\/])\../, config.apiClient],
-        persistent: true
+        persistent: true,
+        ignoreInitial: true
     }).on('all', (event, filePath) => {
-        console.log(`\n${event} detected in ${path.relative(process.cwd(), filePath)}.`);
+        const relativePath = path.relative(process.cwd(), filePath);
+        let eventMessage = '';
+
+        switch (event) {
+            case 'add':
+                eventMessage = chalk.green(`File created: ${relativePath}`);
+                break;
+            case 'change':
+                eventMessage = chalk.yellow(`File changed: ${relativePath}`);
+                break;
+            case 'unlink':
+                eventMessage = chalk.red(`File deleted: ${relativePath}`);
+                break;
+            default:
+                return; // Ignore addDir, unlinkDir, etc.
+        }
+
+        console.log(`\n${eventMessage}`);
+
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(async () => {
-            console.log('Change detected. Rebuilding...');
+            console.log(chalk.blue('Rebuilding due to changes...'));
             try {
                 await runBuild();
                 sendReload();
             } catch (error) {
-                console.error('Rebuild failed:', error);
+                logError('Rebuild Failed', error);
             }
         }, 100);
     });
@@ -150,12 +196,28 @@ async function startDevServer() {
     try {
         await runBuild();
         server.listen(config.devPort, () => {
-            console.log(`\nServer running at http://localhost:${config.devPort}`);
-            console.log('Watching for file changes...');
+            const localIp = getLocalIpAddress();
+            const table = new Table({
+                head: [chalk.cyan('Shork Development Server'), chalk.cyan('Details')],
+                colWidths: [25, 50],
+                style: { 'padding-left': 1, 'padding-right': 1, head: ['cyan'], border: ['grey'] }
+            });
+
+            table.push(
+                ['Status', chalk.green('Running')],
+                ['Local', `http://localhost:${config.devPort}`],
+                ['Network', `http://${localIp}:${config.devPort}`],
+                ['Live Reload', `ws://localhost:${config.wsPort}`],
+                ['Watching Files', chalk.yellow('Enabled')]
+            );
+
+            console.log(table.toString());
+            console.log(chalk.gray('\nWatching for file changes... Press Ctrl+C to stop.'));
+
             watchFiles();
         });
     } catch (error) {
-        console.error('Could not start development server:', error);
+        logError('Could not start development server', error);
     }
 }
 

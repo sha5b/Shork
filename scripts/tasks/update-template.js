@@ -11,7 +11,8 @@ const filesToCopy = [
   'README.md',
   'shork.config.js',
   '.vscode',
-  'package.json' // We'll handle this separately to avoid recursion
+  'package.json', // We'll handle this separately to avoid recursion
+  'nodemon.json'
 ];
 
 async function updateTemplate() {
@@ -81,7 +82,7 @@ async function updateTemplate() {
       type: rootPackageJson.type,
       scripts: {
         "build": "node scripts/build.js",
-        "dev": "node scripts/dev.js",
+        "dev": "nodemon",
         "test": "vitest"
       },
       devDependencies: rootPackageJson.devDependencies

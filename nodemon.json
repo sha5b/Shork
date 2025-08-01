@@ -1,0 +1,6 @@
+{
+    "watch": ["scripts"],
+    "ext": "js,json",
+    "ignore": ["dist/", "src/", "static/"],
+    "exec": "node scripts/tasks/dev.js"
+  }

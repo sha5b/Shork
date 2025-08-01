@@ -81,21 +81,13 @@ const server = http.createServer(async (req, res) => {
     try {
         let filePath = path.join(config.distDir, req.url);
 
-        // If the URL ends with a slash, it's a directory; append index.html
-        if (req.url.endsWith('/')) {
+        // If the path is a directory, append index.html
+        if (await fs.pathExists(filePath) && (await fs.stat(filePath)).isDirectory()) {
             filePath = path.join(filePath, 'index.html');
         }
 
         // Check if the file exists
         if (!(await fs.pathExists(filePath))) {
-            // If it doesn't exist, and the original URL didn't have a slash,
-            // it might be a directory access without the slash. Redirect.
-            const dirPath = path.join(config.distDir, req.url);
-            if (await fs.pathExists(dirPath) && (await fs.stat(dirPath)).isDirectory()) {
-                res.writeHead(301, { 'Location': req.url + '/' });
-                return res.end();
-            }
-
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             return res.end(`Not Found: ${req.url}`);
         }

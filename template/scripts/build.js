@@ -11,16 +11,14 @@ import { processComponents } from './components.js';
 import { generateApiClient } from './generate-api-client.js';
 import config from '../shork.config.js';
 import { importWithCache } from './lib/utils.js';
-
-
-
-
+import { generateSchemaTypes } from './generate-schemas.js';
 
 /**
  * Main build function.
  * @returns {Promise<void>}
  */
 async function build() {
+    await generateSchemaTypes();
     console.log('Starting build...');
 
     // 0. Generate API client
@@ -180,17 +178,18 @@ async function buildPage(route, appTemplate, options) {
     const rawPageContent = await fs.readFile(route.page, 'utf-8');
     const rawLayoutContent = await fs.readFile(route.layout, 'utf-8');
 
-    const { html: processedPage, css: pageCss } = await preprocessHtml(rawPageContent);
-    const { html: processedLayout, css: layoutCss } = await preprocessHtml(rawLayoutContent);
+    const { html: processedPage, css: pageCss, js: pageJs } = await preprocessHtml(rawPageContent);
+    const { html: processedLayout, css: layoutCss, js: layoutJs } = await preprocessHtml(rawLayoutContent);
 
     const combinedCss = layoutCss + '\n' + pageCss;
+    const combinedJs = layoutJs + '\n' + pageJs;
 
     // 4. Load data and validate schema
     let pageData = { page: { params }, showExtra: route.path === '/', ...globalData, ...props };
     if (route.js && await fs.pathExists(route.js)) {
         const module = await importWithCache(route.js);
         if (module.load && typeof module.load === 'function') {
-            const loadedData = await module.load({ params });
+            const loadedData = await module.load({ params, props, globalData });
 
             // Validate loaded data against schema if it exists
             const schemaPath = route.js.replace('+page.js', '+schema.js');
@@ -249,58 +248,63 @@ async function buildPage(route, appTemplate, options) {
         throw layoutLintError;
     }
 
-        let pageRender;
-        try {
-            const renderData = { props: {}, ...pageData };
-            pageRender = await ejs.render(processedPage, renderData, { async: true, root: config.componentsDir, filename: route.page });
-        } catch (error) {
-            console.error(`\n❌ EJS render error in page: ${route.page}`);
-            // Avoid circular references when stringifying data
-            const safeData = JSON.parse(JSON.stringify(pageData, (key, value) => 
-                (key === 'props' && typeof value === 'object' && value !== null) ? Object.keys(value) : value
-            ));
-            console.error(`  Data available: ${JSON.stringify(safeData, null, 2)}`);
-            throw error;
-        }
+    let pageRender;
+    try {
+        const renderData = { props: {}, ...pageData };
+        pageRender = await ejs.render(processedPage, renderData, { async: true, root: config.componentsDir, filename: route.page });
+    } catch (error) {
+        console.error(`\n❌ EJS render error in page: ${route.page}`);
+        // Avoid circular references when stringifying data
+        const safeData = JSON.parse(JSON.stringify(pageData, (key, value) => 
+            (key === 'props' && typeof value === 'object' && value !== null) ? Object.keys(value) : value
+        ));
+        console.error(`  Data available: ${JSON.stringify(safeData, null, 2)}`);
+        throw error;
+    }
 
-        // Render the layout with the page content as the body
-        let layoutRender;
-        try {
-            const layoutData = { body: pageRender, ...pageData };
-            layoutRender = await ejs.render(processedLayout, layoutData, { async: true, root: config.componentsDir, filename: route.layout });
-        } catch (error) {
-            console.error(`\n❌ EJS render error in layout: ${route.layout}`);
-            throw error;
-        }
+    // Render the layout with the page content as the body
+    let layoutRender;
+    try {
+        const layoutData = { body: pageRender, ...pageData };
+        layoutRender = await ejs.render(processedLayout, layoutData, { async: true, root: config.componentsDir, filename: route.layout });
+    } catch (error) {
+        console.error(`\n❌ EJS render error in layout: ${route.layout}`);
+        throw error;
+    }
 
-        // Minify the combined CSS
-        const { code: minifiedCss } = transformCss({
-            filename: 'style.css', // virtual filename
-            code: Buffer.from(combinedCss),
-            minify: true,
-            sourceMap: false,
-        });
+    // Minify the combined CSS
+    const { code: minifiedCss } = transformCss({
+        filename: 'style.css', // virtual filename
+        code: Buffer.from(combinedCss),
+        minify: true,
+        sourceMap: false,
+    });
 
-        const headContent = `<style>${minifiedCss.toString()}</style>`;
-        const finalHtml = appTemplate.replace('%body%', layoutRender).replace('%head%', headContent);
+    const headContent = `<style>${minifiedCss.toString()}</style>`;
+    const scriptsContent = combinedJs ? `<script type="module">${combinedJs}</script>` : '';
 
-        const outputPath = path.join(config.distDir, routePath === '/' ? 'index.html' : path.join(routePath.slice(1), 'index.html'));
-        await fs.ensureDir(path.dirname(outputPath));
-        await fs.writeFile(outputPath, finalHtml);
+    const finalHtml = appTemplate
+        .replace('%body%', layoutRender)
+        .replace('%head%', headContent)
+        .replace('%scripts%', scriptsContent);
+
+    const outputPath = path.join(config.distDir, routePath === '/' ? 'index.html' : path.join(routePath.slice(1), 'index.html'));
+    await fs.ensureDir(path.dirname(outputPath));
+    await fs.writeFile(outputPath, finalHtml);
 }
 
 /**
  * Pre-processes HTML to convert custom component tags to EJS includes and extract styles.
  * @param {string} content
- * @returns {Promise<{html: string, css: string}>}
+ * @returns {Promise<{html: string, css: string, js: string}>}
  */
 export async function preprocessHtml(content) {
     // 1. Process all components recursively.
-    // This resolves all <Component:...> tags, props, and slots, and extracts their CSS.
-    const { html: componentProcessedHtml, css: componentCss } = await processComponents(content);
+    const { html: componentProcessedHtml, css: componentCss, js: componentJs } = await processComponents(content);
 
     let processedHtml = componentProcessedHtml;
     let accumulatedCss = componentCss;
+    let accumulatedJs = componentJs;
 
     // 2. Extract any remaining top-level styles from the page itself.
     const styleRegex = /<style>([\s\S]*?)<\/style>/g;
@@ -309,7 +313,14 @@ export async function preprocessHtml(content) {
         return ''; // Remove the style tag from the HTML
     });
 
-    // 3. Convert all custom template tags to EJS tags.
+    // 3. Extract any remaining top-level scripts from the page itself.
+    const scriptRegex = /<script>([\s\S]*?)<\/script>/g;
+    processedHtml = processedHtml.replace(scriptRegex, (match, js) => {
+        accumulatedJs += js;
+        return ''; // Remove the script tag from the HTML
+    });
+
+    // 4. Convert all custom template tags to EJS tags.
     // IMPORTANT: This happens *after* components are processed.
 
     // Convert {{#each ... as ...}} and {{/each}} to EJS tags
@@ -323,7 +334,7 @@ export async function preprocessHtml(content) {
     // Convert {{...}} to EJS tags for expressions (must be last)
     processedHtml = processedHtml.replace(/\{\{\s*(.*?)\s*\}\}/g, (_, expression) => `<%- ${expression.trim()} %>`);
 
-    return { html: processedHtml, css: accumulatedCss };
+    return { html: processedHtml, css: accumulatedCss, js: accumulatedJs };
 }
 
 build();

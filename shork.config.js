@@ -15,10 +15,10 @@ const config = {
   libDir: path.resolve(process.cwd(), 'src', 'lib'),
 
   // Key file paths
-  runtimeJs: path.resolve(process.cwd(), 'src', 'lib', 'runtime.js'),
+  runtimeJs: path.resolve(process.cwd(), 'src', 'lib', 'client', 'runtime.js'),
   outputJs: path.resolve(process.cwd(), 'dist', 'main.js'),
   manifest: path.resolve(process.cwd(), 'dist', 'manifest.json'),
-  apiClient: path.resolve(process.cwd(), 'src', 'lib', 'api-client.js'),
+  apiClient: path.resolve(process.cwd(), 'src', 'lib', 'client', 'api-client.js'),
 
   // Dev server
   devPort: 8080,

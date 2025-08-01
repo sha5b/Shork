@@ -1,4 +1,4 @@
-import * as stores from './stores.js';
+import * as stores from '../stores/index.js';
 import { initEventHandlers } from './hydration.js';
 
 /**
@@ -12,7 +12,7 @@ export function init(container) {
         if (el instanceof HTMLElement) {
             const storeName = el.dataset.subscribe;
             if (storeName && storeName in stores) {
-                /** @type {import('./store.js').Writable<any>} */
+                /** @type {import('../stores/writable.js').Writable<any>} */
                 const store = stores[/** @type {keyof typeof stores} */(storeName)];
                 store.subscribe(value => {
                     el.textContent = String(value);

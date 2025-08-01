@@ -1,4 +1,4 @@
-import { db } from '../../../lib/database.js';
+import { db } from '../../../lib/data/database.js';
 
 export const load = async ({ params }) => {
     const post = await db.posts.findUnique({ where: { slug: params.slug } });

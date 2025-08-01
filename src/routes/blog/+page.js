@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { db } from '../../lib/database.js';
+import { db } from '../../lib/data/database.js';
 
 /**
  * Defines the schema for the blog index page data.

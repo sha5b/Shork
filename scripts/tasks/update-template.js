@@ -46,9 +46,7 @@ async function updateTemplate() {
     // 2.5. Copy necessary scripts and fix their internal imports for the template
     const scriptsToCopy = {
       'core/build.js': 'scripts/build.js',
-      'core/components.js': 'scripts/components.js',
       'core/generate-api-client.js': 'scripts/generate-api-client.js',
-      'core/lib/utils.js': 'scripts/lib/utils.js',
       'tasks/dev.js': 'scripts/dev.js'
     };
 

@@ -91,10 +91,10 @@ Our framework uses a clean, mustache-style syntax for embedding logic in HTML.
 
 ### Data Loading
 
-Data for your pages is loaded at build time from a central, mock database located at `src/lib/database.js`. This file acts as a single source of truth for all dynamic content, ensuring consistency across your application.
+Data for your pages is loaded at build time from a central, mock database located at `src/lib/data/database.js`. This file acts as a single source of truth for all dynamic content, ensuring consistency across your application.
 
 ```javascript
-// src/lib/database.js
+// src/lib/data/database.js
 export const db = {
     posts: {
         findMany: async () => { /* returns all posts */ },

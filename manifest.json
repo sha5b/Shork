@@ -36,7 +36,7 @@
       "page": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.html",
       "layout": "/home/runner/work/Shork/Shork/src/routes/+layout.html",
       "js": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+page.js",
-      "schema": "/home/runner/work/Shork/Shork/src/routes/blog/[slug]/+schema.js"
+      "schema": null
     }
   ]
 }
